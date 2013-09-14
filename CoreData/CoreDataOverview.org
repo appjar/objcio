@@ -1,7 +1,7 @@
-* Core Data概述 [fn:1]
+* Core Data概述 [1]
 
 Core Data 可能是在 OS X 和 iOS 的类库中最容易被误解的了。为了帮助读者了解它，我们会快速的过一遍相关知识，让你对它是什么有一个大概的了解，因为对 Core Data 概念的正确把握是正确运用 Core Data 的必要条件，几乎所有的在使用 Core Data 过程中遇到的挫折都与对下面两个问题的错误理解有关：它是做什么的、它是如何工作的。那么，我们就开始吧
 
 * Footnotes
 
-[fn:1] 原文链接：www.objc.io/issue-4/core-data-overview.html
+[1] 原文链接：www.objc.io/issue-4/core-data-overview.html
