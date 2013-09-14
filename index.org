@@ -1,5 +1,5 @@
 * Core Data
-本期objc.io的话题是关于 Core Data 的，首先是 Daniel 的[[CoreData/CoreDataOverview.org][Core Data 概述]] 和 Chris 的 [[CoreData/SimpleButCompleteCoreDataApplication.org][简单但完整的 Core Data 应用]] ；接着在更深入探讨之前，Brent 会带我们看看他是如何 [[CoreData/UsesSQLiteInsteadOfCoreData][使用SQLite替换Core Data]] 但为什么你尽量不要这么做；接下来， Florian 的 [[CoreData/DataModelsAndModelObjects][Data Model 和 Model Object]]、Daniel 的 [[CoreData/PerformantFetching][高效查询]]、Martin 的 [[CoreData/CustomCoreDataMigrations][自定义 Core Data 数据迁移]] 会深入讨论Core Data的技术细节。。
+本期objc.io的话题是关于 Core Data 的，首先是 Daniel 的[[CoreData/CoreDataOverview.org][Core Data 概述]] 和 Chris 的 [[CoreData/SimpleButCompleteCoreDataApplication.org][简单但完整的 Core Data 应用]] ；接着在更深入探讨之前，Brent 会带我们看看他是如何 [[CoreData/UsesSQLiteInsteadOfCoreData.org][使用SQLite替换Core Data]] 但为什么你尽量不要这么做；接下来， Florian 的 [[CoreData/DataModelsAndModelObjects.org][Data Model 和 Model Object]]、Daniel 的 [[CoreData/PerformantFetching.org][高效查询]]、Martin 的 [[CoreData/CustomCoreDataMigrations.org][自定义 Core Data 数据迁移]] 会深入讨论Core Data的技术细节。。
 * Views
 * Concurrent Programming
 * Lighter View Controllers
