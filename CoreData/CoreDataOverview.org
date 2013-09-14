@@ -4,4 +4,4 @@ Core Data 可能是在 OS X 和 iOS 的类库中最容易被误解的了。为�
 
 * Footnotes
 
-[1] 原文链接：www.objc.io/issue-4/core-data-overview.html
+[1] 原文链接：http://www.objc.io/issue-4/core-data-overview.html
