@@ -30,6 +30,46 @@ Core Data 最强大的地方是它对属于它的对象的管理机制，这也�
 [[images/02.png]]
 
 
+** 各个部分是如何一起工作的
+让我们快速的通过一个栗子来过一遍各部分之间是如何协同工作的。在[[SimpleButCompleteApplication.org][这篇文章]]中会讨论一个使用 Core Data 的完整的应用，文章中的栗子里有会用到一个实体——一个拥有一个 title 字段的实体，每一项都有子项，这样我们就建立了一个父子关系——这就是我们的数据模型。
+
+正如我们在[[DataModelsAndModelObjects.org][Data Model 和 Model Object]]中提到的，在 Core Data 中，一类内存对象统称为一种实体。在文章中的栗子里，我们只有一种实体：Item 实体，这种实体是 NSManagedObject 的子类。Item 实体会映射到 Item 类，这种机制在文章中会详细阐述。
+
+我们的应用有一个根 item，它并没有什么特殊的地方，只不过是我们用来显示 Item 层次结构的一个 item，一个我们从来不会给它设置父 item 的 item。
+
+当我们的应用启动时，我们会按照上面的图示设置好我们的 Core Data 栈结构——一个持久化存储、一个内存对象上下文和一个用于两部分通信的 PSC。
+
+当应用第一次启动时，并没有任何的 item，我们第一件要做的事情就是创建一个根 item，你可以通过把它插入到上下文中的方式来管理这些对象。
+
+** 创建对象
+
+你可以用 NSEntityDescription 的这个方法创建对象：
+
+# BEGIN_SRC objective-c
++ (id) insertNewObjectForEntityForName:(NSString *)entityName
+                inManagedObjectContext:(NSManagedObjectContext *)context
+# END_SRC
+它看起来有点儿笨重。我们另外建议你给你的模型类添加两个额外的方法：
+
+# BEGIN_SRC objective-c
++ (NSString *)entityName
+{
+    return @"Item";
+}
+
++ (instanceType)insertNewObjectInManagedObjectContext:(NSManagedObjectContext *)moc
+{
+    return [NSEntityDescription insertNewObjectForEntityForName:[self entityName]
+                                         inManagedObjectContext:moc];
+# END_SRC
+
+现在，我们可以通过下面的方法插入一个根 item：
+
+# BEGIN_SRC objective-c
+Item *rootItem = [Item insertNewObjectInManagedObjectContext:managedObjectContext];
+# END_SRC
+
+目前我们在上下文中只有一个 item，上下文知道这个新插入的 item 这个根 item 也知道这个上下文（它有一个 -managedObjectContext 的方法）。
 
 * Footnotes
 
