@@ -152,9 +152,39 @@ NSOrderedSet *childer = rootItem.children;
 
 改变对象的值
 ---
+现在让我们一起试着改变一个 item 的 title：
+
+
+``` objective-c
+item.title = @"New title";
+```
+
+当代码运行到这时，这个 item 的 title 就被改变了，同时，上下文也会把这个 item 标记为已更改状态，当我们下一次调用 save 方法时，PSC 会把这次更改写入数据库 —— 上下文的一个关键责任就是记录下来这些更改。
+
+上下文知道从上一次保存至今哪些对象是新插入的、哪些是被更改的、哪些是已删除，你可以通过 - inserterdObjects、- updatedObjects 和 - deletedObjects 来获取这些对象，也可以通过 - changedValues 来查看变更状态的对象的变更的属性。
+尽管你可能永远也不会用到这些方法，但这些方法是 Core Data 用来把更改写入数据库的途径。
+
+保存过程需要 PSC 和持久化存储层轮流访问 SQLite 数据库。当我们从数据库查询时，所耗费的代价要比在内存中查询高；但保存时，这个代价是固定的，不管你一次保存了多少数据，代价都是按次算的，每次的代价取决于 SQLite 的工作方式。当你进行了大量的更改，在需要保存时，你就需要一次保存一定数量的更改：如果你每次在做修改时都保存，你就会付出很高的代价，因为保存得太频繁了；如果你保存得频率过低，在每次保存时，SQLite 又有太多的更改需要处理。
+
+另一个需要注意的地方是保存操作时原子性的，它们是一个事务——要么所有的改变都被存储下来，要么 SQLite 一个改变也不存储，当自定义 NSIncrementalStore 子类时需要谨记这点。你必须保证保存操作不会失败，一旦失败的话，你要回滚这次保存得所有操作。不然，内存重的对象状态会与数据库中的状态不一致。
+
+一般情况下，保存操作时不会失败的，但是当 Core Data 允许每个持久化存储可以关联多个上下文时，PSC 可能会出现冲突。因为不同的改变是被记录在不同的上下文中的，其他的上下文就可能会引入冲突。就算一个 Core Data 栈结构中只有一个持久化存储，也可能会导致冲突（比如，一个上下文要更新一个对象的值但另一个上下文却要删除这个对象）。另一个可能会失败的原因是验证失败，Core Data 支持复杂的验证机制。举个简单的验证规则的栗子，比如一个 item 的 title 字段长度必须小于 300。当然，Core Data 也支持跨属性的验证。
 
 总结
 ---
+如果你认为 Core Data 看起来令人畏惧，那最可能的原因就是它允许你用特别复杂的方法来使用，只需时刻牢记一点：努力让事情变得简单。它会使开发变得容易，减少你和你的用户的麻烦。只有在你确信复杂的方法（比如后台上下文）会真正带来帮助时，才去使用复杂的配置。
+
+当你使用简单的 Core Data 栈结构，或者说你使用了我在本文中介绍的对象管理方法时，你会很快发现 Core Data 能给你提供许多帮助，并且使用它开发会加速你的开发周期。
+
+本话题的更多文章
+---
+* [一个简单却完整的 Core Data 应用](SimpleButCompleteCoreDataApplication.md)
+* [使用 SQLite 和 FMDB 替代 Core Data](UsesSQLiteInsteadOfCoreData.md)
+* [Data Model 和 Model Objects](DataModelsAndModelObjects.md)
+* [导入大量数据]()
+* [查询](PerformantFetching.md)
+* [自定义 Core Data 的数据迁移](CustomCoreDataMigrations.md)
+
 
 Footnotes
 ---
