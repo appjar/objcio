@@ -167,3 +167,85 @@
     return cell;
 }
 ```
+
+###创建 Table View Controller###
+
+到了这里，我们可以使用我们刚才创建的类来创建一个 View Controller 展示 Item 列表了。在栗子应用中，我们用到了一个 Storyboard，在 Storyboard 中添加了一个以 Table View Controller 为根的 Navigation Controller，这样会自动把这个 Table View Controller 设为数据源，但是我们不想这么做。所以，在 viewDidLoad 中，我们要添加下面这些代码：
+
+``` objective-c
+fetchedResultsControllerDataSource =
+    [[FetchedResultsControllerDataSource alloc] initWithTableView:self.tableView];
+self.fetchedResultsControllerDataSource.fetchedResultsController = 
+    self.parent.childrenFetchedResultsController;
+fetchedResultsControllerDataSource.delegate = self;
+fetchedResultsControllerDataSource.reuseIdentifier = @"Cell";
+```
+
+在 Fetched Results Controller Data Source 的初始化函数中会设置 Table View 的 Data Source，Reuse Identifer 也需要与 Storyboard 中的对应上。我们还需要实现代理方法：
+
+``` objective-c
+- (void)configureCell:(id)theCell withObject:(id)object
+{
+    UITableViewCell* cell = theCell;
+    Item* item = object;
+    cell.textLabel.text = item.title;
+}
+```
+
+当然，除了设置 TextLabel，你还可以对许多其它的东西进行设置，你随便了。现在，我们已经为显示数据做好了一切准备，但是还是空空如也，什么都没有显示出来。
+
+添加交互
+----
+我们会添加几种数据的交互方法：首先，会加入一个能添加 Item 的方法；然后，会实现 Fetched Results Controller 的代理来刷新 Table View；最后添加对删除和恢复数据的支持。
+
+###添加 Item###
+
+为了添加Item，我从 [Clear](http://www.realmacsoftware.com/clear/) 剽窃了一种交互方式，顺便说一句，Clear 是我认为的最美的应用之一。我们把一个 Text Field 设置为 Table View 的 header，然后修改 Table View 的 Content Inset 来使 Text Field 默认为隐藏状态，要看设置的方法可以戳[这里](../Views/InternalOfScrollView.md)。跟往常一样，完整的代码放在 GitHub 上，下面这几行是在 textFieldShouldReturn 中比较关键的：
+
+``` objective-c
+[Item insertItemWithTitle:title 
+                   parent:self.parent
+   inManagedObjectContext:self.parent.managedObjectContext];
+textField.text = @"";
+[textField resignFirstResponder];
+```
+
+###监听数据变化###
+
+下一步是确保在有新的 Item 插入时，你的 Table View 也会插入一行。有几种方法，可以达成这一目的，我们选择了实现 Fetched Results Controller 的代理的方法：
+
+``` objective-c
+- (void)controller:(NSFetchedResultsController*)controller
+   didChangeObject:(id)anObject
+       atIndexPath:(NSIndexPath*)indexPath
+     forChangeType:(NSFetchedResultsChangeType)type
+      newIndexPath:(NSIndexPath*)newIndexPath
+{
+    if (type == NSFetchedResultsChangeInsert) {
+        [self.tableView insertRowsAtIndexPaths:@[newIndexPath]
+                              withRowAnimation:UITableViewRowAnimationAutomatic];
+    }
+}
+```
+
+当有删除、更改或者移动的时候，Fetched Results Controller 调用这个方法。如果你同时有多个更改的话，你需要再实现另外两个方法来让 Table View 把这些改变一次性展示出来。对于一次简单的插入或删除一个 Item 的操作，可能表现得不明显，但是当你实现数据同步时，这样做会变得很漂亮。
+
+``` objective-c
+- (void)controllerWillChangeContent:(NSFetchedResultsController*)controller
+{
+    [self.tableView beginUpdates];
+}
+
+- (void)controllerDidChangeContent:(NSFetchedResultsController*)controller
+{
+    [self.tableView endUpdates];
+}
+```
+
+###使用 Collection View###
+
+Fetched Results Controller 不仅仅可以与 Table View 合作，它可以用到任何种类的 View 中。因为它是基于 Index Path 的，所以它也可以与 Collection View 一起工作得相当完美，尽管你可能要悲催的修改一些代码，因为 Collection View 没有 beginUpdates 和 endUpdates，只有一个 performBatchUpdates。所以你要把你获得的所有的更改都收集起来，然后再 controllerDidChangeContent 中一次性把改变都展示出来，想看栗子可以戳[这里](https://github.com/AshFurrow/UICollectionView-NSFetchedResultsController)。
+
+###实现你自己的 Fetched Results Controller###
+
+你可以不用 NSFetchedResultsController，实际上，你可以为你的应用定制一些东西，能变得更有效率。你可以监听 NSManagedObjectContextOjbectsDidChangeNotification，当你接收到这个事件时，userInfo 字典会包含更改的、插入的、删除的对象，那么你可以随意处理它们了。
