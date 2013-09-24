@@ -103,3 +103,67 @@
                                                         cacheName:nil];
 }
 ```
+
+添加一个可以接收 Fetched Results Controller 反馈的 Table View
+---
+下一步我们要创建一个根 View Controller：一个 Table View，它可以从一个 NSFetchedResultsController 中获取数据。这个 Fetched Results Controller 会管理你的 Fetch Request，如果你还给它设置了一个代理，那么当 Managed Object Context 中有数据变动时，它会及时的通知你，这意味着如果你实现了它的代理方法，那么当你感兴趣的数据发生变化时，你可以自动更你的 Table View。举个栗子，如果你在后台有一个同步线程，而且把数据变化保存到了数据库中，那么你的 Table View 就会自动更新了。
+
+###创建 Table View 的 Data Source###
+在[清爽的 View Controller](../LighterViewControllers/LighterViewController.md)中，我们演示了如何把 Data Source 从 Table View 中剥离出来，我们要对 Fetched Results Controller 做相同的事情；我们创建了一个单独的类 FetchedResultsControllerDataSource 来扮演 Table View 的 Data Source，同时它也负责监听 Fetched Results Controller 并更新 Table View。我们用 Table View 来初始化这个 FetchedResultsControllerDataSource，像这样：
+
+``` objective-c
+- (id)initWithTableView:(UITableView *)tableView
+{
+    self = [super init];
+    if (self) {
+        self.tableView = tableView;
+        self.tableView.dataSource = self;
+    }
+    return self;
+}
+```
+
+在我们设置 Fetch Results Controller 的时候，我们也必须给它设置代理，同时执行第一次查询操作。此时很容易忘记调用 `perFormFetch:`，如果那样的话，你不会获得到任何结果，当然也不会产生任何错误。
+
+``` objective-c
+- (void)setFetchedResutlsController:(NSFetchedResultsController *)fetchedResultsController
+{
+    _fetchedResultsController = fetchedResultsController;
+    fetchedResultsController.delegate = self;
+    [fetchedResultsController performFetch:NULL];
+}
+```
+
+既然我们要实现 UITableViewDataSource 协议，那么下面两个方法是一定要实现的：
+
+``` objective-c
+- (NSInteger)numberOfSectionsInTableView:(UITableView *)tableView
+{
+    return self.fetchedResultsController.sections.count;
+}
+
+- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)sectionIndex
+{
+    id<NSFetchedResultsSectionInfo> section = self.fetchedResultsController.sections[sectionIndex];
+    return section.numberOfObjects;
+}
+```
+
+在创建 cell 时，需要两步：
+
+* 通过 Fetched Results Controller 找到对应的对象
+* 找到一个可复用的 cell，并通过 Table View 的代理来设置这个 cell
+
+现在，我们已经有了一个很好的职责分离的设计，View Controller 只需要负责使用传入的对象来更新这个 cell：
+
+``` objective-c
+- (UITableViewCell*)tableView:(UITableView*)tableView 
+        cellForRowAtIndexPath:(NSIndexPath*)indexPath
+{
+    id object = [self.fetchedResultsController objectAtIndexPath:indexPath];
+    id cell = [tableView dequeueReusableCellWithIdentifier:self.reuseIdentifier
+                                             forIndexPath:indexPath];
+    [self.delegate configureCell:cell withObject:object];
+    return cell;
+}
+```
