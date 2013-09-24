@@ -43,6 +43,63 @@
 
 当你创建了模型之后，你就可以添加一个有两个属性的 Item 了；接着，你要给它添加两个关系：parent 和 children；你需要把这两个关系设置为互逆的，也就是说如果你把 a 的 parent 设置成了 b，那么 b 就自动把 a 设置成了 它的 children 之一了。
 
-通常情况下，你还可以使用有序关系，并把 order 属性置空，但是当你使用 NSFetchedResultsController 查询是，这个有序关系就表现得不是特别理想了。我们要做的是：要么重新实现一部分 NSFetchedResultsController 的；要么重新实现排序，我会选择后者。
+通常情况下，你还可以使用 order 关系，或把 order 属性置空，但是当你使用 NSFetchedResultsController 查询是，这个 order 关系就表现得不是特别理想了。我们要做的是：要么重新实现一部分 NSFetchedResultsController 的；要么重新实现排序，我选择了后者。
 
-现在在菜单中选择“编辑” > “创建 NSManagedObject 子，创建了一个绑定到这个实体的子类，这样你会得到两个新建的文件：Item.h 和 Item.m，在头文件中还有一个由于历史原因保留下来的额外的 category，我们要立即把这个东西删掉。
+现在在菜单中选择“编辑” > “创建 NSManagedObject 子类”，创建了一个绑定到这个实体的子类，这样你会得到两个新建的文件：Item.h 和 Item.m，在头文件中还有一个由于历史原因保留下来的额外的 category，我们要立即把这个东西删掉。
+
+创建一个 Store 类
+---
+我们要创建一个根节点作为 item 树的起点，为了创建它并在稍后找出它，我们需要创建一个简单的 Store 类来帮助完成这一任务。它有一个 managed object context 和一个找到 rootItem 的方法。在我们应用的 app delegate 中，我们要找到这个 rootItem 并把它传递给根 view controller。你也可以把这个 rootItem 存储到 user defaults 中，以便能够更快的找到它：
+
+``` objective-c
+- (Item *)rootItem 
+{
+    NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:@"Item"];
+    request.predicate = [NSPredicate predicateWithFormat:@"parent = %@", nil];
+    NSArray *objects = [self.managedObjectContext executeFetchRequest:request error:NULL];
+    Item *rootItem = [objects lastObject];
+    if (rootItem == nil) {
+        rootItem = [Item insertItemWithTitle:nil
+                                      parent:nil
+                      inManagedObjectContext:self.managedObjectContext];
+    }
+    return rootItem;
+}
+```
+
+添加一个新的 item 是很简单的，有一点需要注意的是，当我们设置一个新的 item 的 order 属性时，我们要把这个属性的值设置得比它的兄弟 item 的 order 属性值都大：这样一来，第一个孩子的 order 为 0，之后的孩子的 order 属性的值都要比它前面的大1。我们会在 Item 类中自定义一个方法，并把上数设置 order 的逻辑写到这个自定义的方法中：
+
+``` objective-c
++ (instancetype)insertItemWithTitle:(NSString *)title
+                             parent:(Item *)parent
+             inManagedObjectContext:(NSManagedObjectContext *)managedObjectContext
+{
+    NSUInteger order = parent.numberOfChildren;
+    Item *item = [NSEntityDescription insertNewObjectForEntityName:self.entityName
+                                            inManagedObjectContext:managedObjectContext];
+    item.title = title;
+    item.parent = parent;
+    item.order = @(order);
+    return item;
+}
+
+- (NSUInteger)numberOfChildren
+{
+    return self.children.count;
+}
+```
+
+为了自动刷新表的内容，我们还会用到一个 fetched results controller，这个东西会管理一个 fecth request 和许多 item，能很好的配合 table view，我们会在下一部分介绍到它：
+
+```objective-c
+- (NSFetchedResultsController *)childrenFetchedResultsController
+{
+    NSFetchRequest *request = [NSFetchRequest fetchRequestWithEntityName:[self.class entityName]];
+    request.predicate = [NSPredicate predicateWithFormat:@"parent = %@", self];
+    request.sortDescriptor = @[[NSSortDescriptor sortDescriptorWithKey:@"order" ascend:YES]];
+    return [[NSFetchResultsController alloc] initWithFetchRequest:request
+                                             managedObjectContext:self.mangedObjectContext
+                                               sectionNameKeyPath:nil
+                                                        cacheName:nil];
+}
+```
