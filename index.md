@@ -1,8 +1,24 @@
 * Core Data
-本期objc.io的话题是关于 Core Data 的，首先是 Daniel 的[Core Data 概述](CoreData/CoreDataOverview.md)和 Chris 的[简单但完整的 Core Data 应用](CoreData/SimpleButCompleteCoreDataApplication.md)；接着在更深入探讨之前，Brent 会带我们看看他是如何[使用SQLite替换Core Data](CoreData/UsesSQLiteInsteadOfCoreData.md)但为什么你尽量不要这么做；接下来， Florian 的[Data Model 和 Model Object](CoreData/DataModelsAndModelObjects.md)、Daniel 的[高效查询](CoreData/PerformantFetching.md)、Martin 的[自定义 Core Data 数据迁移](CoreData/CustomCoreDataMigrations.md) 会深入讨论Core Data的技术细节。
+    + [Core Data 概述](CoreData/CoreDataOverview.md)
+    + [简单但完整的 Core Data 应用](CoreData/SimpleButCompleteCoreDataApplication.md)
+    + [使用SQLite替换Core Data](CoreData/UsesSQLiteInsteadOfCoreData.md)
+    + [Data Model 和 Model Object](CoreData/DataModelsAndModelObjects.md)
+    + [高效查询](CoreData/PerformantFetching.md)
+    + [自定义 Core Data 数据迁移](CoreData/CustomCoreDataMigrations.md) 
 * Views
-这回书我们从几个方面来研究一下视图层。Daniel 会先来介绍一些基础[像素是如何被绘制到屏幕上去的](Views/HowPixelsActuallyGetOntoTheScreen.md)，然后 Joe 解释一下[ScrollView 的内部机制](Views/InternalOfScrollView.md)；Ole 从更加实践的角度出发，像你示范一下如何[自定义容器视图](Views/CustomCollectionViewLayouts.md)，Chris 会谈一谈[创建自定义的控件](Views/CreatingCustomControls)；最后，Florian 在他的[高级自动布局](Views/AdvancedAutoLayoutToolbox.md)会多说一些自动布局的高级应用。
+    + [像素是如何被绘制到屏幕上去的](Views/HowPixelsActuallyGetOntoTheScreen.md)
+    + [ScrollView 的内部机制](Views/InternalOfScrollView.md)
+    + [自定义容器视图](Views/CustomCollectionViewLayouts.md)
+    + [创建自定义的控件](Views/CreatingCustomControls)
+    + [高级自动布局](Views/AdvancedAutoLayoutToolbox.md)
 * Concurrent Programming
-今天我们来说说并行编程的事儿。Florian 首先从整体上介绍一下[并行 API 和缺陷](ConcurrentProgramming/ConcurrencyAPIAndPitfalls.md)，在Daniel向你展示[底层并行](ConcurrentProgramming/LowlevelConcurrency.md)、libdispatch 和 OSAtomic 等究级技术之前，Chris 会演示如何[后台线程的常见任务](ConcurrentProgramming/CommonTasksInTheBackground.md)；最后，Perter 会分享一些他在开发 PSPDFKit 过程中[线程安全](ConcurrentProgramming/ThreadSafety.md)的经验，Tabias 再介绍一下[并行程序的测试](ConcurrentProgramming/TestingConcurrentApplications.md)。
+    + [并行 API 和缺陷](ConcurrentProgramming/ConcurrencyAPIAndPitfalls.md)
+    + [底层并行](ConcurrentProgramming/LowlevelConcurrency.md)
+    + [后台线程的常见任务](ConcurrentProgramming/CommonTasksInTheBackground.md)
+    + [线程安全](ConcurrentProgramming/ThreadSafety.md)
+    + [并行程序的测试](ConcurrentProgramming/TestingConcurrentApplications.md)
 * Lighter View Controllers
-首先 Chris 说一说[清爽的 View Controller](LighterViewControllers/LighterViewController.md)，Florian 会在[干净的 TableView 代码](LighterViewControllers/CleanTableViewCode.md)中进一步展开这一话题；接着 Daniel 讲讲[View Controller 的测试](LighterViewControllers/ViewControllerTesting.md)；最后，我们的特邀作者 Ricki 介绍一下[View Controller 的包含关系](LighterViewController/ViewControllerContainment.md)。
+    + [清爽的 View Controller](LighterViewControllers/LighterViewController.md)
+    + [干净的 TableView 代码](LighterViewControllers/CleanTableViewCode.md)
+    + [View Controller 的测试](LighterViewControllers/ViewControllerTesting.md)
+    + [View Controller 的包含关系](LighterViewController/ViewControllerContainment.md)
