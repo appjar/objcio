@@ -249,3 +249,64 @@ Fetched Results Controller 不仅仅可以与 Table View 合作，它可以用�
 ###实现你自己的 Fetched Results Controller###
 
 你可以不用 NSFetchedResultsController，实际上，你可以为你的应用定制一些东西，能变得更有效率。你可以监听 NSManagedObjectContextOjbectsDidChangeNotification，当你接收到这个事件时，userInfo 字典会包含更改的、插入的、删除的对象，那么你可以随意处理它们了。
+
+传递模型对象
+---
+
+有了添加和显示 Item 的功能之后，可以着手开始开发添加子列表功能了。你可以在 Storyboard 里把一个 cell 拖到 View Controller 中来创建一个 Segue，最好给这个 Segue 命名，如果我们在同一个 View Controller 中有许多 Segue 的话，我们可以找到要找的 Segue。
+
+我处理 Segue 的方法如下：首先，要找到要找的 Segue；然后对每一个 Segue，为它们的目标 View Controller，创建一个单独的方法。
+
+``` objective-c
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender
+{
+	[super prepareForSegue:segue sender:sender];
+ 	if ([segue.identifier isEqualToString:selectItemSegue]) {
+		[self presentSubItemViewController:segue.destinationViewController]
+	}
+}
+
+- (void)presentSubItemViewController:(ItemViewController *)subItemViewController
+{
+	Item *item = [self.fetchedResultsControllerDataSource selectedItem];
+	subItemViewController.parent = item;
+}
+```
+
+子 View Controller 需要的唯一的东西就是 Item，它可以从这个 Item 中获得到 Managed Object Context。我们从 Data Source 中得到被选中的 Item，然后把它传递给子 View Controller 就行了，就是这么简单。
+
+一个非常常见的坏习惯就是把 Managed Object Context 作为应用代理的一个属性，然后从任意的地方都可以访问到它。如果你想在你的代码中的某一个特定的部分使用另外一个 Managed Object Context 的话，按照上面的方法做回是代码变得非常难以重构，单元测试做起来也会很困难。
+
+现在，试着把一个 Item 添加到子列表中，你的应用可能会华丽的跪掉，因为我们现在有两个 Fetched View Controller —— 一个用于最顶部的 View Controller，另一个用于根 View Controller —— 第二个会试图在未被显示时刷新屏幕，这样会导致崩溃。解决方法是告诉 Data Source 停止对 Fetched Results Controller 的监听：
+
+``` objective-c
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
+    self.fetchedResultsControllerDataSource.paused = NO;
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    [super viewWillDisappear:animated];
+    self.fetchedResultsControllerDataSource.paused = YES;
+}
+```
+
+实现以上目的的一个方式是在 Data Source 中把 Fetched Results Controller 的代理设为 nil，这样就不会再收到任何更新的通知了：
+
+``` objective-c
+- (void)setPaused:(BOOL)paused
+{
+    _paused = paused;
+    if (paused) {
+        self.fetchedResultsController.delegate = nil;
+    } else {
+        self.fetchedResultsController.delegate = self;
+        [self.fetchedResultsController performFetch:NULL];
+        [self.tableView reloadData];
+    }
+}
+```
+
+PerformFetch 会确保你的 Data Source 是最新的，当然，还有更好的实现方法，就是不把代理设为空，而是在暂停状态下记录下所有的变化，然后在离开暂停状态的时候刷新 Table View。
