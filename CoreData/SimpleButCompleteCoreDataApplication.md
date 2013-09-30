@@ -310,3 +310,52 @@ Fetched Results Controller 不仅仅可以与 Table View 合作，它可以用�
 ```
 
 PerformFetch 会确保你的 Data Source 是最新的，当然，还有更好的实现方法，就是不把代理设为空，而是在暂停状态下记录下所有的变化，然后在离开暂停状态的时候刷新 Table View。
+
+删除
+---
+
+我们需要通过几个步骤来添加删除功能：首先，找到要提供删除功能的 Table View；然后，把对象从 Core Data 中删除，并确保剩下的 Item 的 Order 属性仍然配置正确。
+
+为了添加滑动删除的支持，需要实现 Data Source 的下面两个方法：
+
+``` objective-c
+- (BOOL)tableView:(UITableView*)tableView canEditRowAtIndexPath:(NSIndexPath*)indexPath
+{
+    return YES;
+}
+ 
+- (void)tableView:(UITableView *)tableView commitEditingStyle:(UITableViewCellEditingStyle)editingStyle forRowAtIndexPath:(NSIndexPath *)indexPath 
+{
+    if (editingStyle == UITableViewCellEditingStyleDelete) {
+        id object = [self.fetchedResultsController objectAtIndexPath:indexPath];
+        [self.delegate deleteObject:object];
+    }
+}
+```
+
+我们需要告诉代理（那个 View Controller）来删除对象，而不是直接把对象删除了，这样做就可以不必与 Data Source 共享持久化存储层，也可以使自定义动作更容易维护；相应的 View Controller 仅仅需要调用 Managed Object Context 的 deleteObject: 即可。
+
+还有另外两个重要的问题没有解决：如果处理我们删除的 Item 的 Children；在删除之后，如何处理其他 Item 的 Order。对于前者，Core Data 提供了良好的删除支持：在我们的数据模型中，我们可以把 Children 关系的删除规则设为 Cascade。对于后者，我们可以重写 prepareForDeletion 方法，在方法中把所有 Order 比被删除的 Item 高的邻居 Item 的 Order 都更新：
+
+``` objective-c
+- (void)prepareForDeletion
+{
+    NSSet *siblings = self.parent.children;
+    NSPredicate *predicate = [NSPredicate predicateWithFormat:@"order > %@", self.order];
+    NSSet *siblingsAfterSelf = [siblings filteredSetUsingPredicate:predicate];
+    [siblingsAfterSelf enumerateObjectsUsingBlock:^(Item* sibling, BOOL *stop)
+    {
+        sibling.order = @(sibling.order.integerValue - 1);
+    }];
+}
+```
+
+现在我们几乎已经完成了对删除的支持，可以触控 Table View 的 Cell 来删除对象了，最后一步就是实现一些必须的代码，来确保当有 Item 被删除时，它对应的 Cell 也要被删除。在我们的 Data Source 的 controller:didChangeObject: 方法中，需要添加一个 if 分支：
+
+``` objective-c
+...
+else if (type == NSFetchedResultsChangeDelete) {
+    [self.tableView deleteRowsAtIndexPaths:@[indexPath]
+                          withRowAnimation:UITableViewRowAnimationAutomatic];
+}
+```
