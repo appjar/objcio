@@ -1,4 +1,4 @@
-一个完整的 Core Data 应用
+一个完整的 Core Data 应用 <sup>[1]</sup>
 ====   
 
 在本文中，我们将会创建一个小而完整的 Core Data 应用，这个应用允许你建立一组层次化的列表，列表的每一个表项可以有它的子列表，这个列表的层次化结构可以是非常非常深的。为了完全的理解 Core Data 的运行机制，我们会手工建立起这个 Core Data 的堆栈结构，而不是使用 Xcode 提供的模板。示例代码可以到 [GitHub](https://github.com/objcio/issue-4-full-core-data-application) 上查看。
@@ -359,3 +359,71 @@ else if (type == NSFetchedResultsChangeDelete) {
                           withRowAnimation:UITableViewRowAnimationAutomatic];
 }
 ```
+
+添加 Undo 支持
+---
+
+Core Data 另一个非常漂亮的功能就是它整合了 Undo 支持。我们需要添加 Shake to Undo （晃动以恢复，iPhone 的一个功能）功能，第一步就是告诉应用我们能做这个：
+
+``` objective-c
+application.applicationSupportsShakeToEdit = YES;
+```
+
+现在，当用户晃动了手机，应用就会去找第一个响应者要它的 Undo Manager，然后来执行 Undo 操作。在[上个月的这篇文章](../Views/CreatingCustomControls.md)中，我们看到一个 View Controller 也是在响应链中的，这就是我们下面要用到的特性。我们要在 View Controller 中重写 UIResponder 的下面两个方法：
+
+``` objective-c
+- (BOOL)canBecomeFirstResponder {
+    return YES;
+}
+
+- (NSUndoManager*)undoManager
+{
+    return self.managedObjectContext.undoManager;
+}
+```
+
+现在，当有晃动手势事件发生时，Managed Object Context 的 Undo Manager 会获得一个 Undo 消息，并 Undo 最近的一次变化。记住，在 iOS 上，一个 Managed Object Context 默认是没有 Undo Manager 的（但是在 Mac 上是有的），所以我们在配置 Core Data 栈结构时，需要手动添加这个 Undo Manager：
+
+``` objective-c
+self.managedObjectContext.undoManager = [[NSUndoManager alloc] init];
+```
+
+现在基本上已经完成了 Undo 功能了，当你晃动手机时，iOS 会弹出一个对话框，对话框有两个按钮：Undo 和 Cancel。Core Data 会自动把数据的变化分组，举个栗子，addItem:parent 会被分为一个 Undo 动作，而删除会被分为另外的 Undo 动作。
+
+为了能使用户更好的使用 Undo 功能，我们可以给动作命名，只要稍稍修改一下 textFieldShouldReturn: 就可以了：
+
+``` objective-c
+NSString* title = textField.text;
+NSString* actionName = [NSString stringWithFormat:
+    NSLocalizedString(@"add item \"%@\"", @"Undo action name of add item"), title];
+[self.undoManager setActionName:actionName];
+[self.store addItem:title parent:nil];
+```
+
+这样的话，当用户晃动手机时，弹框上的文字就不仅仅是一个 Undo 了。
+
+编辑
+---
+在栗子代码中是不支持编辑的，但是在实际使用中，仅仅修改 Item 的属性也是常见场景。比如，只修改 Item 的标题，这个栗子看起来影响不大；但是把一个 Item foo 的 Parent 变成 bar，这会导致许多变化。
+
+排序
+---
+对 Cell 进行重新排序也没有支持，但是很容易实现。不过这有一个需要注意的地方：当你允许用户手动对 Item 进行排序，你必须更新 Item 的 Order 属性，这会使 Fetched Results Controller 调用它的相关代理方法。这一过程在 [NSFetchedResultsControllerDelegate documentation](https://developer.apple.com/library/ios/documentation/CoreData/Reference/NSFetchedResultsControllerDelegate_Protocol/Reference/Reference.html#//apple_ref/doc/uid/TP40008228-CH1-SW14) 中有解释。
+
+保存
+---
+保存很简单，只需要调用 Managed Object Context 的 save 方法即可，唯一困难的地方就是保存时机，苹果的示例代码在 applicationWillTerminate: 中保存，但是你也可以根据情况把它写在 applicationDidEnterBackground: 或者在运行时保存。
+
+本话题的更多文章
+---
+* [Core Data概述](CoreDataOverview.md)
+* [使用 SQLite 和 FMDB 替代 Core Data](UsesSQLiteInsteadOfCoreData.md)
+* [Data Model 和 Model Objects](DataModelsAndModelObjects.md)
+* [导入大量数据]()
+* [查询](PerformantFetching.md)
+* [自定义 Core Data 的数据迁移](CustomCoreDataMigrations.md)
+
+备注
+---
+[1] 原文链接：http://www.objc.io/issue-4/full-core-data-application.html
+[2] 由于我没有实践过 Storyboard 方面的编程，文中关于 Storyboard 的相关段落翻译可能会不尽准确，请见谅。有兴趣的可以移步原文。
