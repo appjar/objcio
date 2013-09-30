@@ -425,5 +425,5 @@ NSString* actionName = [NSString stringWithFormat:
 
 备注
 ---
-[1] 原文链接：http://www.objc.io/issue-4/full-core-data-application.html
+[1] 原文链接：http://www.objc.io/issue-4/full-core-data-application.html  
 [2] 由于我没有实践过 Storyboard 方面的编程，文中关于 Storyboard 的相关段落翻译可能会不尽准确，请见谅。有兴趣的可以移步原文。
