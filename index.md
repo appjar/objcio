@@ -9,7 +9,7 @@
     + [像素是如何被绘制到屏幕上去的](Views/HowPixelsActuallyGetOntoTheScreen.md)
     + [ScrollView 的内部机制](Views/InternalOfScrollView.md)
     + [自定义容器视图](Views/CustomCollectionViewLayouts.md)
-    + [创建自定义的控件](Views/CreatingCustomControls)
+    + [创建自定义的控件](Views/CreatingCustomControls.md)
     + [高级自动布局](Views/AdvancedAutoLayoutToolbox.md)
 * Concurrent Programming
     + [并行 API 和缺陷](ConcurrentProgramming/ConcurrencyAPIAndPitfalls.md)
